@@ -1,4 +1,4 @@
-# Facebook # Facebook Post Performance Analysis
+# Facebook Post Performance Analysis
 
 Exploratory analysis of Facebook post performance using data exported from the Meta dashboard.
 
