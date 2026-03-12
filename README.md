@@ -1,6 +1,6 @@
 # Facebook Post Performance Analysis
 
-Exploratory analysis of Facebook post performance for **Liz Izakson Mashal**, using data exported from Meta Business Suite.
+Exploratory analysis of Facebook post performance for **Liz Izakson Mashal**, using data exported from the Facebook profile dashboard.
 
 ## Goals
 
@@ -13,7 +13,7 @@ Understand what influences post performance:
 
 ## Data
 
-- Source: Meta Business Suite export (`data/010625_120326_fb_posts.csv`)
+- Source: Facebook profile dashboard export (`data/010625_120326_fb_posts.csv`)
 - Clean version (Liz's posts only, correct timestamps): `data/facebook_posts_clean.csv`
 - Posts are filtered to **Liz's own page only** — tagged posts from other pages are excluded from analysis
 - Timezone correction applied: +10h for posts before 2026-03-08, +9h from 2026-03-08 onwards
