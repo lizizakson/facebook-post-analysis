@@ -18,7 +18,7 @@ from plotly.subplots import make_subplots
 
 # ── 1. Load & clean data ─────────────────────────────────────────────────────
 
-DATA_PATH = Path(__file__).parent.parent / "data" / "facebook_posts.csv"
+DATA_PATH = Path(__file__).parent.parent / "data" / "010625_120326_fb_posts.csv"
 df = pd.read_csv(DATA_PATH)
 
 # Normalise column names
@@ -38,8 +38,14 @@ numeric_cols = [
 for col in numeric_cols:
     df[col] = pd.to_numeric(df[col], errors="coerce")
 
-# Parse timestamps and apply the known +10 h offset correction
-df["publish_time"] = pd.to_datetime(df["publish_time"], errors="coerce") + pd.Timedelta(hours=10)
+# Parse timestamps and apply timezone correction:
+#   - Posts before 2026-03-08: +10 h
+#   - Posts from  2026-03-08 onwards: +9 h
+CUTOFF = pd.Timestamp("2026-03-08")
+df["publish_time"] = pd.to_datetime(df["publish_time"], errors="coerce")
+mask_old = df["publish_time"] < CUTOFF
+df.loc[mask_old,  "publish_time"] += pd.Timedelta(hours=10)
+df.loc[~mask_old, "publish_time"] += pd.Timedelta(hours=9)
 df["date"]    = df["publish_time"].dt.date
 df["hour"]    = df["publish_time"].dt.hour
 df["weekday"] = df["publish_time"].dt.day_name()
@@ -55,8 +61,19 @@ df["post_origin"] = df["page_name"].apply(
 df_tagged = df[df["post_origin"] == "Tagged"].copy()
 df = df[df["post_origin"] == "My Post"].copy()
 
+# Drop posts with missing impressions (too recent or partial export)
+df = df[df["impressions"].notna()].copy()
+
+# ── Dataset summary for dashboard subtitle ────────────────────────────────────
+n_posts    = len(df)
+date_min   = df["publish_time"].min().strftime("%d %b %Y")
+date_max   = df["publish_time"].max().strftime("%d %b %Y")
+SUBTITLE   = f"Liz Izakson Mashal · {n_posts} posts · {date_min} – {date_max}"
+
 # Derived metrics
-df["engagement_rate"] = df["interactions"] / df["impressions"].replace(0, np.nan)
+df["engagement_rate"]   = df["interactions"] / df["impressions"].replace(0, np.nan)
+df["repeat_view_rate"]  = df["views"]        / df["viewers"].replace(0, np.nan)
+df["view_through_rate"] = df["viewers"]      / df["impressions"].replace(0, np.nan)
 
 # Post classification (quadrant: impressions vs engagement_rate)
 imp_med = df["impressions"].median()
@@ -341,7 +358,7 @@ fig.add_trace(
 
 fig.update_layout(
     title=dict(
-        text="<b>Facebook Post Performance Dashboard</b>",
+        text=f"<b>Facebook Post Performance Dashboard</b><br><sup>{SUBTITLE}</sup>",
         font=dict(size=22),
         x=0.5,
     ),
@@ -377,7 +394,13 @@ fig.update_xaxes(title_text="Post Type",       row=3, col=3)
 fig.update_xaxes(title_text="Day of Week",     row=4, col=1)
 fig.update_xaxes(title_text="Day of Week",     row=4, col=2)
 
-# ── 4. Save output ────────────────────────────────────────────────────────
+# ── 4. Export clean data ──────────────────────────────────────────────────
+
+csv_path = Path(__file__).parent.parent / "data" / "facebook_posts_clean.csv"
+df.drop(columns=["title_short"], errors="ignore").to_csv(csv_path, index=False)
+print(f"Clean data exported to: {csv_path.resolve()}")
+
+# ── 5. Save output ────────────────────────────────────────────────────────
 
 output_path = Path(__file__).parent / "dashboard.html"
 fig.write_html(str(output_path), include_plotlyjs="cdn")
