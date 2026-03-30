@@ -52,8 +52,9 @@ data/
 notebooks/
   01_clean.ipynb                 # data cleaning, timezone correction, feature engineering, export
   02_eda.ipynb                   # exploratory analysis and visualisation
-  03_text_analysis.ipynb         # LLM-based linguistic annotation (in progress)
-  04_modeling.ipynb              # predictive modeling (planned)
+  03_text_analysis.ipynb         # LLM-based linguistic annotation
+  04_eda_text.ipynb              # text feature EDA & annotation quality analysis
+  05_modeling.ipynb              # predictive modeling (planned)
 ```
 
 ---
